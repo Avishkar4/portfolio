@@ -110,7 +110,7 @@
   }, "-=0.6");
 
   /* ---------- 5. Modular Component Scroll Triggers (Fade & Rise on Scroll) ---------- */
-  const explicitScrollElements = document.querySelectorAll(".section .reveal-element, .timeline-item, .metric-card, .cert-card, .achievement-row");
+  const explicitScrollElements = document.querySelectorAll("section .reveal-element, .timeline-item, .stat-cell, .proj-card, .exp-item, .cert-card, .ach-card, .metric-card");
   
   explicitScrollElements.forEach((element) => {
       gsap.fromTo(element, 
@@ -173,13 +173,17 @@
     const len = path.getTotalLength();
     path.style.strokeDasharray = len;
     path.style.strokeDashoffset = prefersReducedMotion ? 0 : len;
+    
+    // Fallback trigger context targeting the gallery pin layout parent container cleanly
+    const parentPin = document.querySelector(".gallery-pin") || document.getElementById("galleryPin") || "#projects";
+
     if (!prefersReducedMotion) {
       gsap.to(path, {
         strokeDashoffset: 0,
         duration: 1.4,
         ease: "power2.out",
         delay: 0.3,
-        scrollTrigger: { trigger: "#galleryPin", start: "top 80%" },
+        scrollTrigger: { trigger: parentPin, start: "top 80%" },
       });
     }
   });
@@ -190,9 +194,9 @@
       far less prone to jank on touch devices. */
   ScrollTrigger.matchMedia({
     "(min-width: 881px)": function () {
-      const pin = document.getElementById("galleryPin") || document.getElementById("projects-pin-container");
-      const track = document.getElementById("galleryTrack") || document.querySelector(".horizontal-slider");
-      const progressBar = document.getElementById("galleryProgress");
+      const pin = document.querySelector(".gallery-pin") || document.getElementById("galleryPin") || document.getElementById("projects-pin-container");
+      const track = document.querySelector(".gallery-track") || document.getElementById("galleryTrack") || document.querySelector(".horizontal-slider");
+      const progressBar = document.querySelector(".gallery-progress-bar") || document.getElementById("galleryProgress");
       if (!pin || !track) return;
 
       // Handle slide count configuration dynamically if running fallback layout
@@ -220,7 +224,9 @@
         },
       });
 
-      return () => tween.scrollTrigger && tween.scrollTrigger.kill();
+      return () => {
+        if (tween.scrollTrigger) tween.scrollTrigger.kill();
+      };
     },
   });
 
