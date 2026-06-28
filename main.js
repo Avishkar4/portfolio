@@ -1,7 +1,7 @@
 /* ====================================================================
    main.js — core interaction layer
    Handles: preloader, Lenis smooth scroll, nav (incl. mobile + active
-   link state), anchor click scrolling, ticker tape duplication.
+   link state), anchor click scrolling, ticker tape duplication, and custom cursor.
    Animation/ScrollTrigger logic lives in animations.js — this file
    exposes `window.lenis` so animations.js can sync GSAP's ticker to it.
    ==================================================================== */
@@ -17,7 +17,32 @@
   // safety net: if 'load' never fires cleanly, reveal the page anyway
   setTimeout(() => document.body.classList.add("loaded"), 4000);
 
-  /* ---------- 2. Lenis smooth scroll ---------- */
+  /* ---------- 2. Custom Cursor Follower Mechanics ---------- */
+  const follower = document.querySelector(".mouse-follower");
+  
+  if (follower && window.gsap) {
+    // quickTo pipes coordinates directly into an active tween for 60fps+ performance
+    const xTo = gsap.quickTo(follower, "x", { duration: 0.3, ease: "power3.out" });
+    const yTo = gsap.quickTo(follower, "y", { duration: 0.3, ease: "power3.out" });
+
+    window.addEventListener("mousemove", (e) => {
+      xTo(e.clientX);
+      yTo(e.clientY);
+    });
+
+    // Expand cursor states when hovering over links, buttons, or informational layout cards
+    const interactiveTargets = document.querySelectorAll("a, button, .btn, .metric-card, .experience-card, .cert-card, .achievement-row, #navToggle");
+    interactiveTargets.forEach(target => {
+      target.addEventListener("mouseenter", () => {
+        gsap.to(follower, { scale: 1.5, borderColor: "#FFFFFF", duration: 0.2 });
+      });
+      target.addEventListener("mouseleave", () => {
+        gsap.to(follower, { scale: 1, borderColor: "#636366", duration: 0.2 });
+      });
+    });
+  }
+
+  /* ---------- 3. Lenis smooth scroll ---------- */
   let lenis = null;
   if (window.Lenis) {
     lenis = new Lenis({
@@ -42,9 +67,9 @@
   // expose for animations.js (works even if Lenis failed to load — guarded there)
   window.lenis = lenis;
 
-  /* ---------- 3. Anchor click scrolling ----------
-     Lenis intercepts native scroll, so plain hash-jumps can fail or
-     feel instant/broken. We handle every in-page anchor explicitly. */
+  /* ---------- 4. Anchor click scrolling ----------
+      Lenis intercepts native scroll, so plain hash-jumps can fail or
+      feel instant/broken. We handle every in-page anchor explicitly. */
   document.querySelectorAll('a[href^="#"]').forEach((link) => {
     link.addEventListener("click", (e) => {
       const id = link.getAttribute("href");
@@ -63,12 +88,13 @@
     });
   });
 
-  /* ---------- 4. Nav: scrolled state + active link ---------- */
+  /* ---------- 5. Nav: scrolled state + active link ---------- */
   const nav = document.getElementById("site-nav");
   const navLinks = document.querySelectorAll(".nav-link");
   const sections = Array.from(document.querySelectorAll("section[id], header[id]"));
 
   function updateNavState() {
+    if (!nav) return;
     const y = window.scrollY;
     nav.classList.toggle("scrolled", y > 40);
 
@@ -85,26 +111,29 @@
   window.addEventListener("scroll", updateNavState, { passive: true });
   updateNavState();
 
-  /* ---------- 5. Mobile menu ---------- */
+  /* ---------- 6. Mobile menu ---------- */
   const navToggle = document.getElementById("navToggle");
   const navLinksWrap = document.getElementById("navLinks");
 
   function closeMobileMenu() {
     document.body.classList.remove("menu-open");
-    navLinksWrap.classList.remove("open");
+    if (navLinksWrap) navLinksWrap.classList.remove("open");
   }
-  navToggle.addEventListener("click", () => {
-    const isOpen = navLinksWrap.classList.toggle("open");
-    document.body.classList.toggle("menu-open", isOpen);
-  });
+  
+  if (navToggle && navLinksWrap) {
+    navToggle.addEventListener("click", () => {
+      const isOpen = navLinksWrap.classList.toggle("open");
+      document.body.classList.toggle("menu-open", isOpen);
+    });
+  }
 
-  /* ---------- 6. Ticker tape — duplicate content for a seamless loop ---------- */
+  /* ---------- 7. Ticker tape — duplicate content for a seamless loop ---------- */
   const track = document.getElementById("tickerTrack");
   if (track) {
     track.innerHTML += track.innerHTML; // duplicate once, CSS animation handles the loop
   }
 
-  /* ---------- 7. Footer year ---------- */
+  /* ---------- 8. Footer year ---------- */
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 })();
