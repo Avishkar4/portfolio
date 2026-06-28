@@ -430,22 +430,33 @@ footer span{ font-family:var(--f-mono); font-size:.7rem; color:var(--text-faint)
 /* ---------- 16. Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  .mouse-follower { display: none !important; }
 }
 
 /* ---------- 17. Custom Mouse Follower Layer ---------- */
 .mouse-follower {
   width: 24px;
   height: 24px;
-  border: 2px solid #636366;
+  border: 1px solid rgba(236, 238, 240, 0.4); /* subtle white/silver border */
+  background: transparent;
   border-radius: 50%;
   position: fixed;
   top: 0;
   left: 0;
   pointer-events: none;
   z-index: 9999;
-  /* Fixed margins handle structural layout center alignment without transform property overrides, */
-  /* leaving GSAP free to animate structural matrices at 60fps+ without frame-clashing updates. */
   margin-left: -12px;
   margin-top: -12px;
   will-change: transform;
+  transition: width 0.3s var(--ease), height 0.3s var(--ease), background 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+
+/* Active interaction state when hovering over links, buttons, and actionable items */
+.mouse-follower.active {
+  width: 48px;
+  height: 48px;
+  margin-left: -24px;
+  margin-top: -24px;
+  background: rgba(236, 238, 240, 0.08);
+  border-color: rgba(236, 238, 240, 0.8);
 }
