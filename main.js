@@ -31,13 +31,17 @@
     });
 
     // Expand cursor states when hovering over links, buttons, or informational layout cards
-    const interactiveTargets = document.querySelectorAll("a, button, .btn, .metric-card, .experience-card, .cert-card, .achievement-row, #navToggle");
+    // Updated selector mapping to match both your current CSS architecture (.proj-card, .stat-cell, .exp-item) and standard selectors
+    const interactiveTargets = document.querySelectorAll(
+      "a, button, .btn, .nav-toggle, #navToggle, .proj-card, .stat-cell, .exp-item, .cert-card, .ach-card, .metric-card, .experience-card, .achievement-row"
+    );
+
     interactiveTargets.forEach(target => {
       target.addEventListener("mouseenter", () => {
-        gsap.to(follower, { scale: 1.5, borderColor: "#FFFFFF", duration: 0.2 });
+        follower.classList.add("active");
       });
       target.addEventListener("mouseleave", () => {
-        gsap.to(follower, { scale: 1, borderColor: "#636366", duration: 0.2 });
+        follower.classList.remove("active");
       });
     });
   }
