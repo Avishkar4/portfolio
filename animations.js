@@ -13,9 +13,9 @@
   gsap.registerPlugin(ScrollTrigger);
 
   /* ---------- 1. Sync GSAP's ticker with Lenis ----------
-     This is the standard Lenis+GSAP integration: GSAP's ticker becomes
-     the single rAF driver, Lenis just gets pumped from inside it, and
-     ScrollTrigger recalculates on every Lenis scroll event. */
+      This is the standard Lenis+GSAP integration: GSAP's ticker becomes
+      the single rAF driver, Lenis just gets pumped from inside it, and
+      ScrollTrigger recalculates on every Lenis scroll event. */
   if (window.lenis) {
     window.lenis.on("scroll", ScrollTrigger.update);
     gsap.ticker.add((time) => window.lenis.raf(time * 1000));
@@ -25,10 +25,10 @@
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- 2. Kinetic word reveal ----------
-     Wraps every word in a text node in <span class="word-mask"><span
-     class="word-inner">word</span></span>. The mask clips overflow,
-     the inner span slides up from below it — classic editorial reveal,
-     and it preserves any nested tags (e.g. <em>) inside the heading. */
+      Wraps every word in a text node in <span class="word-mask"><span
+      class="word-inner">word</span></span>. The mask clips overflow,
+      the inner span slides up from below it — classic editorial reveal,
+      and it preserves any nested tags (e.g. <em>) inside the heading. */
   function splitWords(el) {
     function walk(node) {
       if (node.nodeType === 3) {
@@ -88,7 +88,48 @@
     });
   }
 
-  /* ---------- 4. Parallax divider — layered typography at different speeds ---------- */
+  /* ---------- 4. Hero Entrance Reveal Logic ---------- */
+  const initialTimeline = gsap.timeline();
+  
+  initialTimeline.from(".reveal-text", {
+      y: 60,
+      opacity: 0,
+      duration: 1.2,
+      ease: "power4.out"
+  }).from(".split-words", {
+      y: 30,
+      opacity: 0,
+      duration: 1,
+      ease: "power3.out"
+  }, "-=0.8").from(".reveal-element", {
+      y: 30,
+      opacity: 0,
+      duration: 1,
+      stagger: 0.15,
+      ease: "power3.out"
+  }, "-=0.6");
+
+  /* ---------- 5. Modular Component Scroll Triggers (Fade & Rise on Scroll) ---------- */
+  const explicitScrollElements = document.querySelectorAll(".section .reveal-element, .timeline-item, .metric-card, .cert-card, .achievement-row");
+  
+  explicitScrollElements.forEach((element) => {
+      gsap.fromTo(element, 
+          { opacity: 0, y: 40 },
+          {
+              opacity: 1,
+              y: 0,
+              duration: 0.85,
+              ease: "power2.out",
+              scrollTrigger: {
+                  trigger: element,
+                  start: "top 88%", 
+                  toggleActions: "play none none none"
+              }
+          }
+      );
+  });
+
+  /* ---------- 6. Parallax divider — layered typography at different speeds ---------- */
   if (!prefersReducedMotion) {
     document.querySelectorAll(".pd-layer").forEach((layer) => {
       const speed = parseFloat(layer.dataset.speed || "0.3");
@@ -103,9 +144,31 @@
         },
       });
     });
+
+    // Integrated alternative fallback structure logic for target elements using class ".parallax-banner"
+    const parallaxContainer = document.querySelector(".parallax-banner");
+    const parallaxTarget = document.querySelector(".parallax-bg");
+    
+    if (parallaxContainer && parallaxTarget) {
+        const structuralSpeed = parseFloat(parallaxTarget.getAttribute("data-speed")) || 0.3;
+        
+        gsap.fromTo(parallaxTarget,
+            { y: 0 },
+            {
+                y: () => parallaxContainer.offsetHeight * structuralSpeed,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: parallaxContainer,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true
+                }
+            }
+        );
+    }
   }
 
-  /* ---------- 5. Sparkline draw-in on each project card ---------- */
+  /* ---------- 7. Sparkline draw-in on each project card ---------- */
   document.querySelectorAll(".proj-spark path").forEach((path) => {
     const len = path.getTotalLength();
     path.style.strokeDasharray = len;
@@ -121,16 +184,22 @@
     }
   });
 
-  /* ---------- 6. Pinned horizontal project gallery ----------
-     Desktop only — on narrow screens the gallery becomes a normal
-     horizontally-scrollable row (see CSS), which is both simpler and
-     far less prone to jank on touch devices. */
+  /* ---------- 8. Pinned horizontal project gallery ----------
+      Desktop only — on narrow screens the gallery becomes a normal
+      horizontally-scrollable row (see CSS), which is both simpler and
+      far less prone to jank on touch devices. */
   ScrollTrigger.matchMedia({
     "(min-width: 881px)": function () {
-      const pin = document.getElementById("galleryPin");
-      const track = document.getElementById("galleryTrack");
+      const pin = document.getElementById("galleryPin") || document.getElementById("projects-pin-container");
+      const track = document.getElementById("galleryTrack") || document.querySelector(".horizontal-slider");
       const progressBar = document.getElementById("galleryProgress");
       if (!pin || !track) return;
+
+      // Handle slide count configuration dynamically if running fallback layout
+      const projectSlides = track.querySelectorAll(".slide");
+      if (projectSlides.length > 0) {
+          track.style.width = `${projectSlides.length * 100}vw`;
+      }
 
       const getDistance = () => Math.max(0, track.scrollWidth - pin.offsetWidth);
 
@@ -151,13 +220,11 @@
         },
       });
 
-      // return a cleanup fn — ScrollTrigger.matchMedia calls this when
-      // the breakpoint no longer matches (e.g. window resized to mobile)
       return () => tween.scrollTrigger && tween.scrollTrigger.kill();
     },
   });
 
-  /* ---------- 7. Keep everything measured correctly ---------- */
+  /* ---------- 9. Keep everything measured correctly ---------- */
   window.addEventListener("load", () => ScrollTrigger.refresh());
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => ScrollTrigger.refresh());
