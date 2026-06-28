@@ -9,7 +9,7 @@
 /* ---------- 1. Design tokens ---------- */
 :root{
   /* surfaces */
-  --bg:        #09090b;
+  --bg:         #09090b;
   --bg-soft:   #0d0d10;
   --surface:   #141417;
   --surface-2: #1a1a1f;
@@ -23,7 +23,7 @@
 
   /* accents — white / silver, no gold, no orange */
   --white:      #ffffff;
-  --silver:     #b9bcc4;
+  --silver:      #b9bcc4;
   --silver-dim: #7d8089;
 
   /* one quiet signal colour, finance-ticker green, used sparingly */
@@ -431,17 +431,21 @@ footer span{ font-family:var(--f-mono); font-size:.7rem; color:var(--text-faint)
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
 }
-/* --- Custom Mouse Follower --- */
+
+/* ---------- 17. Custom Mouse Follower Layer ---------- */
 .mouse-follower {
-    width: 24px;
-    height: 24px;
-    border: 2px solid #FFFFFF;
-    border-radius: 50%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    will-change: transform;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #636366;
+  border-radius: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  /* Fixed margins handle structural layout center alignment without transform property overrides, */
+  /* leaving GSAP free to animate structural matrices at 60fps+ without frame-clashing updates. */
+  margin-left: -12px;
+  margin-top: -12px;
+  will-change: transform;
 }
